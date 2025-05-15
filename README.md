@@ -1,4 +1,4 @@
-# University Management System - Modern GUI
+# University Management System - Modern GUI V2
 
 A modern, Next.js-inspired GUI application for the University Management System. This application provides a clean, intuitive interface for students and administrators to interact with the university system.
 
