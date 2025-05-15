@@ -1,19 +1,11 @@
 import random
 
 class Subject:
-    def __init__(self):
+    def __init__(self, name="", code="", description=""):
         self.id = str(random.randint(100, 999))
-        self.mark = random.randint(25, 100)
-        self.grade = self.calculate_grade()
-
-    def calculate_grade(self):
-        if self.mark >= 85:
-            return "A"
-        elif self.mark >= 70:
-            return "B"
-        elif self.mark >= 55:
-            return "C"
-        elif self.mark >= 40:
-            return "D"
-        else:
-            return "F"
+        self.name = name
+        self.code = code
+        self.description = description
+        
+    def __str__(self):
+        return f"{self.code}: {self.name}"

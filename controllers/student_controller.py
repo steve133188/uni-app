@@ -80,36 +80,90 @@ class StudentController:
                 else:
                     print("Invalid password format.")
             elif choice == "e":
-                if len(student.subjects) >= 4:
-                    print("Cannot enrol in more than 4 subjects.")
-                else:
-                    subject = Subject()
-                    student.enrol(subject)
-                    students = self.database.load_students()
-                    for s in students:
-                        if s.id == student.id:
-                            s.subjects = student.subjects
-                            break
-                    self.database.save_students(students)
-                    print(f"Enrolled in subject {subject.id}.")
+                # Show available subjects
+                subjects = self.database.load_subjects()
+                if not subjects:
+                    print("No subjects available for enrollment.")
+                    continue
+                    
+                print("\nAvailable Subjects:")
+                for i, subject in enumerate(subjects):
+                    print(f"{i+1}. {subject.code}: {subject.name}")
+                
+                try:
+                    choice = int(input("\nEnter subject number to enroll (0 to cancel): "))
+                    if choice == 0:
+                        continue
+                    if choice < 1 or choice > len(subjects):
+                        print("Invalid selection.")
+                        continue
+                        
+                    selected_subject = subjects[choice-1]
+                    
+                    # Create enrollment
+                    from models.enrollment import Enrollment
+                    enrollment = Enrollment(student.id, selected_subject.id)
+                    
+                    # Add to database
+                    result, message = self.database.add_enrollment(enrollment)
+                    print(message)
+                except ValueError:
+                    print("Please enter a valid number.")
+                except Exception as e:
+                    print(f"Error: {str(e)}")
+                    
             elif choice == "r":
-                subject_id = input("Enter subject ID to remove: ").strip()
-                if student.remove_subject(subject_id):
-                    students = self.database.load_students()
-                    for s in students:
-                        if s.id == student.id:
-                            s.subjects = student.subjects
-                            break
-                    self.database.save_students(students)
-                    print(f"Subject {subject_id} removed.")
-                else:
-                    print("Subject not found.")
+                # Show enrolled subjects
+                enrollments = self.database.get_enrollments_by_student_id(student.id)
+                if not enrollments:
+                    print("You are not enrolled in any subjects.")
+                    continue
+                    
+                print("\nYour Enrollments:")
+                for i, enrollment in enumerate(enrollments):
+                    subject = self.database.get_subject_by_id(enrollment.subject_id)
+                    if subject:
+                        print(f"{i+1}. {subject.code}: {subject.name} - Mark: {enrollment.mark}, Grade: {enrollment.grade}")
+                
+                try:
+                    choice = int(input("\nEnter enrollment number to remove (0 to cancel): "))
+                    if choice == 0:
+                        continue
+                    if choice < 1 or choice > len(enrollments):
+                        print("Invalid selection.")
+                        continue
+                        
+                    selected_enrollment = enrollments[choice-1]
+                    
+                    # Remove from database
+                    if self.database.remove_enrollment(student.id, selected_enrollment.subject_id):
+                        print("Successfully unenrolled from subject.")
+                    else:
+                        print("Failed to unenroll from subject.")
+                except ValueError:
+                    print("Please enter a valid number.")
+                except Exception as e:
+                    print(f"Error: {str(e)}")
             elif choice == "s":
-                print("Enrolled Subjects:")
-                for subject in student.subjects:
-                    print(f"ID: {subject.id}, Mark: {subject.mark}, Grade: {subject.grade}")
-                print(f"Average Mark: {student.average_mark():.2f}")
-                print(f"Pass Status: {'PASS' if student.is_pass() else 'FAIL'}")
+                # Get enrollments from database
+                enrollments = self.database.get_enrollments_by_student_id(student.id)
+                
+                if not enrollments:
+                    print("No subjects enrolled.")
+                else:
+                    print("\nEnrolled Subjects:")
+                    for enrollment in enrollments:
+                        subject = self.database.get_subject_by_id(enrollment.subject_id)
+                        if subject:
+                            print(f"Subject: {subject.code}: {subject.name}")
+                            print(f"Mark: {enrollment.mark}, Grade: {enrollment.grade}")
+                    
+                    # Calculate average mark and pass status
+                    avg_mark = self.database.calculate_student_average_mark(student.id)
+                    is_passing = self.database.is_student_passing(student.id)
+                    
+                    print(f"\nAverage Mark: {avg_mark:.2f}")
+                    print(f"Overall Status: {'Pass' if is_passing else 'Fail'}")
             elif choice == "x":
                 print("Exiting post-login menu.")
                 break
