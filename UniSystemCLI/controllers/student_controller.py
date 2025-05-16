@@ -13,16 +13,17 @@ class StudentController:
                 "\nStudent Subsystem:"
                 + "\n(L) Login"
                 + "\n(R) Register"
-                + "\n(X) Exit"
+                + "\n(X) Exit",
+                CONSOLE_COLORS.YELLOW
             )
             choice = input("Enter your choice: ").strip().lower()
 
             if choice == "l":self.login()
             elif choice == "r":self.register()
             elif choice == "x":
-                console("Exiting Student Subsystem.")
+                console("Exiting Student Subsystem.", CONSOLE_COLORS.GREEN)
                 break
-            else:console("Invalid choice. Please try again.")
+            else:console("Invalid choice. Please try again.", CONSOLE_COLORS.RED)
 
 
     def login(self):
