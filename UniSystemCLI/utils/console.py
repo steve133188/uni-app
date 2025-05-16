@@ -1,7 +1,15 @@
 from enum import Enum
+class CONSOLE_COLORS(Enum):
+    RED = "red"
+    GREEN = "green"
+    YELLOW = "yellow"
+    BLUE = "blue"
+    MAGENTA = "magenta"
+    CYAN = "cyan"
+    WHITE = "white"
+    RESET = "reset"
 
-
-def console( msg: str, color = "white"):
+def console( msg: str, color = CONSOLE_COLORS.WHITE):
     color_codes = {
         "red": "\033[91m",
         "green": "\033[92m",
@@ -12,14 +20,5 @@ def console( msg: str, color = "white"):
         "white": "\033[97m",
     }
     reset_code = "\033[0m"
-    print(f"{color_codes.get(color, color_codes['white'])}{msg}{reset_code}")
+    print(f"{color_codes.get(color.value, color_codes['white'])}{msg}{reset_code}")
 
-class CONSOLE_COLORS(Enum):
-    RED = "red"
-    GREEN = "green"
-    YELLOW = "yellow"
-    BLUE = "blue"
-    MAGENTA = "magenta"
-    CYAN = "cyan"
-    WHITE = "white"
-    RESET = "reset"
