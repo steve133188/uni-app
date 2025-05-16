@@ -4,101 +4,105 @@ import random
 import pickle
 import re
 import os
+from types import new_class
 from typing import List
 
 from UniSystemCLI.models.student import Student
 from UniSystemCLI.models.subject import Subject
+from UniSystemCLI.models.enrollment import Enrollment
+from UniSystemCLI.models.database import Database
 
 
-class Enrollment:
-    def __init__(self, student_id, subject_id):
-        self.id = f"{random.randint(1, 999999):06d}"
-        self.student_id = student_id
-        self.subject_id = subject_id
 
-class Database:
-    def __init__(self):
-        self.data_dir = os.path.join(os.path.dirname(__file__), "../UniSystemCLI/data")
-        self.students_file = os.path.join(self.data_dir, "students.data")
-        self.subjects_file= os.path.join(self.data_dir, "subjects.data")
-        self.enrollments_file = os.path.join(self.data_dir, "enrollments.data")
-        self._init_files()
-
-    def _init_files(self):
-        if not os.path.exists(self.students_file):
-            initial_students = [
-                Student("John Smith", "john@student.com", "pass123"),
-                Student("Emma Wilson", "emma@student.com", "pass456"),
-                Student("Michael Kim", "michael@student.com", "pass789"),
-                Student("Sarah Lee", "sarah@student.com", "pass321"),
-                Student("David Chen", "david@student.com", "pass654")
-            ]
-            self._save_data(initial_students, self.students_file)
-
-        if not os.path.exists(self.subjects_file):
-            # Create AI-related subjects with predefined IDs
-            subjects = []
-            subject_names = [
-                "Introduction to Artificial Intelligence",
-                "Machine Learning Fundamentals",
-                "Deep Learning and Neural Networks",
-                "Natural Language Processing",
-                "Computer Vision",
-                "Robotics and AI",
-                "AI Ethics and Society",
-                "Reinforcement Learning",
-                "Expert Systems",
-                "Data Mining and AI"
-            ]
-
-            for name in subject_names:
-                subject = Subject(name=name)
-                subjects.append(subject)
-
-            self._save_data(subjects, self.subjects_file)
-
-        if not os.path.exists(self.enrollments_file):
-            self._save_data([], self.enrollments_file)
-
-    def _save_data(self, data, filename):
-        with open(filename, 'wb') as f:
-            pickle.dump(data, f)
-
-    def _load_data(self, filename):
-        try:
-            with open(filename, 'rb') as f:
-                return pickle.load(f)
-        except:
-            return []
-
-    def get_students(self):
-        return self._load_data(self.students_file)
-
-    def get_subjects(self):
-        return self._load_data(self.subjects_file)
-
-    def get_enrollments(self):
-        return self._load_data(self.enrollments_file)
-
-    def save_student(self, student):
-        students = self.get_students()
-        students.append(student)
-        self._save_data(students, self.students_file)
-
-    def save_enrollment(self, enrollment):
-        enrollments = self.get_enrollments()
-        enrollments.append(enrollment)
-        self._save_data(enrollments, self.enrollments_file)
-
-    def delete_enrollment(self, student_id, subject_id):
-        enrollments = self.get_enrollments()
-        enrollments = [e for e in enrollments if not (e.student_id == student_id and e.subject_id == subject_id)]
-        self._save_data(enrollments, self.enrollments_file)
+# class Enrollment:
+#     def __init__(self, student_id, subject_id):
+#         self.id = f"{random.randint(1, 999999):06d}"
+#         self.student_id = student_id
+#         self.subject_id = subject_id
+#
+# class Database:
+#     def __init__(self):
+#         self.data_dir = os.path.join(os.path.dirname(__file__), "../UniSystemCLI/data")
+#         self.students_file = os.path.join(self.data_dir, "students.data")
+#         self.subjects_file= os.path.join(self.data_dir, "subjects.data")
+#         self.enrollments_file = os.path.join(self.data_dir, "enrollments.data")
+#         self._init_files()
+#
+#     def _init_files(self):
+#         if not os.path.exists(self.students_file):
+#             initial_students = [
+#                 Student("John Smith", "john@student.com", "pass123"),
+#                 Student("Emma Wilson", "emma@student.com", "pass456"),
+#                 Student("Michael Kim", "michael@student.com", "pass789"),
+#                 Student("Sarah Lee", "sarah@student.com", "pass321"),
+#                 Student("David Chen", "david@student.com", "pass654")
+#             ]
+#             self._save_data(initial_students, self.students_file)
+#
+#         if not os.path.exists(self.subjects_file):
+#             # Create AI-related subjects with predefined IDs
+#             subjects = []
+#             subject_names = [
+#                 "Introduction to Artificial Intelligence",
+#                 "Machine Learning Fundamentals",
+#                 "Deep Learning and Neural Networks",
+#                 "Natural Language Processing",
+#                 "Computer Vision",
+#                 "Robotics and AI",
+#                 "AI Ethics and Society",
+#                 "Reinforcement Learning",
+#                 "Expert Systems",
+#                 "Data Mining and AI"
+#             ]
+#
+#             for name in subject_names:
+#                 subject = Subject(name=name)
+#                 subjects.append(subject)
+#
+#             self._save_data(subjects, self.subjects_file)
+#
+#         if not os.path.exists(self.enrollments_file):
+#             self._save_data([], self.enrollments_file)
+#
+#     def _save_data(self, data, filename):
+#         with open(filename, 'wb') as f:
+#             pickle.dump(data, f)
+#
+#     def _load_data(self, filename):
+#         try:
+#             with open(filename, 'rb') as f:
+#                 return pickle.load(f)
+#         except:
+#             return []
+#
+#     def get_students(self):
+#         return self._load_data(self.students_file)
+#
+#     def load_subjects(self):
+#         return self._load_data(self.subjects_file)
+#
+#     def load_enrollments(self):
+#         return self._load_data(self.enrollments_file)
+#
+#     def save_student(self, student):
+#         students = self.get_students()
+#         students.append(student)
+#         self._save_data(students, self.students_file)
+#
+#     def save_enrollment(self, enrollment):
+#         enrollments = self.load_enrollments()
+#         enrollments.append(enrollment)
+#         self._save_data(enrollments, self.enrollments_file)
+#
+#     def delete_enrollment(self, student_id, subject_id):
+#         enrollments = self.load_enrollments()
+#         enrollments = [e for e in enrollments if not (e.student_id == student_id and e.subject_id == subject_id)]
+#         self._save_data(enrollments, self.enrollments_file)
 
 class LoginWindow:
-    def __init__(self, root, db):
+    def __init__(self, root):
         self.root = root
-        self.db = db
+        self.db = Database()
         self.root.title("University App - Login")
         self.root.geometry("300x200")
 
@@ -125,7 +129,7 @@ class LoginWindow:
             messagebox.showerror("Error", "Invalid email format!")
             return
 
-        students = self.db.get_students()
+        students = self.db.load_students()
         student = next((s for s in students if s.email == email and s.password == password), None)
 
         if student:
@@ -195,8 +199,8 @@ class EnrollmentWindow:
 
     def load_available_subjects(self):
         self.subjects_listbox.delete(0, tk.END)
-        all_subjects = self.db.get_subjects()
-        enrollments = self.db.get_enrollments()
+        all_subjects = self.db.load_subjects()
+        enrollments = self.db.load_enrollments()
         
         # Filter out subjects student is already enrolled in
         student_enrollments = [e.subject_id for e in enrollments if e.student_id == self.student.id]
@@ -207,8 +211,8 @@ class EnrollmentWindow:
 
     def load_enrolled_subjects(self):
         self.enrolled_subjects_listbox.delete(0, tk.END)
-        enrollments = self.db.get_enrollments()
-        subjects = self.db.get_subjects()
+        enrollments = self.db.load_enrollments()
+        subjects = self.db.load_subjects()
 
         student_enrollments = [e for e in enrollments if e.student_id == self.student.id]
         
@@ -216,7 +220,7 @@ class EnrollmentWindow:
             subject = next((s for s in subjects if s.id == enrollment.subject_id), None)
             if subject:
                 self.enrolled_subjects_listbox.insert(tk.END, 
-                    f"{subject.name} (ID: {subject.id}) - Mark: {subject.mark}, Grade: {subject.grade}")
+                    f"{subject.name} (ID: {subject.id}) - Mark: {enrollment.mark}, Grade: {enrollment.grade}")
 
     def enroll(self):
         selection = self.subjects_listbox.curselection()
@@ -224,19 +228,19 @@ class EnrollmentWindow:
             messagebox.showerror("Error", "Please select a subject!")
             return
 
-        enrollments = self.db.get_enrollments()
+        enrollments = self.db.load_enrollments()
         student_enrollments = [e for e in enrollments if e.student_id == self.student.id]
         
         if len(student_enrollments) >= 4:
             messagebox.showerror("Error", "Maximum enrollment (4 subjects) reached!")
             return
 
-        all_subjects = self.db.get_subjects()
+        all_subjects = self.db.load_subjects()
         available_subjects = [s for s in all_subjects if s.id not in [e.subject_id for e in student_enrollments]]
         selected_subject = available_subjects[selection[0]]
         
         new_enrollment = Enrollment(self.student.id, selected_subject.id)
-        self.db.save_enrollment(new_enrollment)
+        self.db.add_enrollment(new_enrollment)
         
         # Refresh both listboxes first
         self.load_available_subjects()
@@ -251,21 +255,21 @@ class EnrollmentWindow:
             messagebox.showerror("Error", "Please select a subject to unenroll!")
             return
 
-        enrollments = self.db.get_enrollments()
+        enrollments = self.db.load_enrollments()
         student_enrollments = [e for e in enrollments if e.student_id == self.student.id]
         
         if not student_enrollments:
             return
             
         selected_enrollment = student_enrollments[selection[0]]
-        self.db.delete_enrollment(self.student.id, selected_enrollment.subject_id)
+        self.db.remove_enrollment(self.student.id, selected_enrollment.subject_id)
         
         # Refresh both listboxes first
         self.load_available_subjects()
         self.load_enrolled_subjects()
         
         # Show success message after update
-        messagebox.showinfo("Success", "Successfully unenrolled from subject!")
+        messagebox.showinfo("Success", "Successfully withdrawn from subject!")
 
 class SubjectWindow:
     def __init__(self, root, db, student, enrollment_window):
@@ -308,8 +312,8 @@ class SubjectWindow:
 
     def load_subjects(self):
         self.subjects_text.delete(1.0, tk.END)
-        enrollments = self.db.get_enrollments()
-        subjects = self.db.get_subjects()
+        enrollments = self.db.load_enrollments()
+        subjects = self.db.load_subjects()
 
         student_enrollments = [e for e in enrollments if e.student_id == self.student.id]
         
@@ -323,8 +327,8 @@ class SubjectWindow:
                 self.subjects_text.insert(tk.END, 
                     f"\nSubject: {subject.name}\n"
                     f"ID: {subject.id}\n"
-                    f"Mark: {subject.mark}\n"
-                    f"Grade: {subject.grade}\n"
+                    f"Mark: {enrollment.mark}\n"
+                    f"Grade: {enrollment.grade}\n"
                     f"------------------------\n")
 
 
