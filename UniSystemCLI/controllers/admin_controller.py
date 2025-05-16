@@ -1,5 +1,6 @@
 from UniSystemCLI.models.database import Database
 from UniSystemCLI.models.student import Student
+from UniSystemCLI.utils.console import console
 
 
 class AdminController:
@@ -8,7 +9,7 @@ class AdminController:
 
     def run(self):
         while True:
-            print(
+            console(
                 "\nAdmin Subsystem:\n(C) Clear Database\n(G) Group Students by Grade\n"
                 +"(P) Partition Students into PASS/FAIL"
                 +"\n(R) Remove a Student by ID\n(S) Show All Students\n(X) Exit"
@@ -20,35 +21,35 @@ class AdminController:
             elif choice == "p":self.partition_students()
             elif choice == "r":
                 student_id = input("Enter student ID to remove: ").strip()
-                if self.database.remove_student(student_id):print(f"Student {student_id} removed.")
-                else:print("Student not found.")
+                if self.database.remove_student(student_id):console(f"Student {student_id} removed.")
+                else:console("Student not found.")
             elif choice == "s":self.show_all_students()
             elif choice == "x":
-                print("Exiting Admin Subsystem.")
+                console("Exiting Admin Subsystem.")
                 break
-            else:print("Invalid choice. Please try again.")
+            else:console("Invalid choice. Please try again.")
 
     def group_students_by_grade(self):
         students:[Student] = self.database.load_students()
         grades = {}
         for student in students:
-            for subject in student.subjects:
-                grades.setdefault(subject.grade, []).append(student)
+            if(len(student.subjects)>0):
+                for subject in student.subjects:
+                    grades.setdefault(subject.grade, []).append(student)
         for grade, students in grades.items():
-            print(f"Grade {grade}: {[student.name for student in students]}")
+            console(f"Grade {grade}: {[student.name for student in students]}")
 
     def partition_students(self):
         students:[Student] = self.database.load_students()
         passed = [student for student in students if student.is_passed()]
-        failed = [student for student in students if not student.is_pass()]
-        print("PASS:")
+        failed = [student for student in students if not student.is_passed()]
+        console("PASS:")
         for student in passed:
-            print(f"{student.name} (ID: {student.id})")
-        print("FAIL:")
-        for student in failed:
-            print(f"{student.name} (ID: {student.id})")
+            console(f"{student.name} (ID: {student.id})")
+        console("FAIL:")
+        for student in failed:console(f"{student.name} (ID: {student.id})")
 
     def show_all_students(self):
         students = self.database.load_students()
         for student in students:
-            print(f"ID: {student.id}, Name: {student.name}, Email: {student.email}")
+            console(f"ID: {student.id}, Name: {student.name}, Email: {student.email}")

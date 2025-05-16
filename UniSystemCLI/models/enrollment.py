@@ -22,3 +22,7 @@ class Enrollment:
         else:self.grade = "F"
 
         return self.grade
+
+    def __str__(self):
+        """Return a string representation of the enrollment."""
+        return f"Enrollment ID: {self.id}, Student ID: {self.student_id}, Subject ID: {self.subject_id}, Mark: {self.mark}, Grade: {self.grade}"

@@ -1,98 +1,35 @@
 import os
 import pickle
 
+from UniSystemCLI.models.student import Student
+
 
 class Database:
     def __init__(self):
         self.data_dir = os.path.join(os.path.dirname(__file__), "../data")
-        self.data_filepath = os.path.join(self.data_dir, "student.data")
-        # Legacy file paths (for migration)
+        # Use separate files for each data type
         self.students_filepath = os.path.join(self.data_dir, "students.data")
         self.subjects_filepath = os.path.join(self.data_dir, "subjects.data")
         self.enrollments_filepath = os.path.join(self.data_dir, "enrollments.data")
         # Ensure data directory exists
         if not os.path.exists(self.data_dir):
             os.makedirs(self.data_dir)
-        # Migrate data if needed
-        self.migrate_data_if_needed()
 
-    # Data structure methods
-    def migrate_data_if_needed(self):
-        """Migrate data from legacy files to the new single file format if needed"""
-        # If the new data file already exists, no migration needed
-        if os.path.exists(self.data_filepath):
-            return
-            
-        # Check if any of the old files exist
-        legacy_students = []
-        legacy_subjects = []
-        legacy_enrollments = []
-        
-        # Load legacy students if file exists
-        if os.path.exists(self.students_filepath):
-            try:
-                with open(self.students_filepath, "rb") as file:
-                    legacy_students = pickle.load(file)
-            except (EOFError, pickle.UnpicklingError):
-                pass
-                
-        # Load legacy subjects if file exists
-        if os.path.exists(self.subjects_filepath):
-            try:
-                with open(self.subjects_filepath, "rb") as file:
-                    legacy_subjects = pickle.load(file)
-            except (EOFError, pickle.UnpicklingError):
-                pass
-                
-        # Load legacy enrollments if file exists
-        if os.path.exists(self.enrollments_filepath):
-            try:
-                with open(self.enrollments_filepath, "rb") as file:
-                    legacy_enrollments = pickle.load(file)
-            except (EOFError, pickle.UnpicklingError):
-                pass
-                
-        # If any legacy data exists, save it to the new format
-        if legacy_students or legacy_subjects or legacy_enrollments:
-            data = {
-                "students": legacy_students,
-                "subjects": legacy_subjects,
-                "enrollments": legacy_enrollments
-            }
-            self.save_data(data)
-            
-            # Optionally, remove old files after migration
-            for filepath in [self.students_filepath, self.subjects_filepath, self.enrollments_filepath]:
-                if os.path.exists(filepath):
-                    try:
-                        os.remove(filepath)
-                    except:
-                        pass
-    
-    def load_data(self):
-        """Load all data from the single data file"""
-        if not os.path.exists(self.data_filepath):
-            return {"students": [], "subjects": [], "enrollments": []}
-        try:
-            with open(self.data_filepath, "rb") as file:
-                return pickle.load(file)
-        except (EOFError, pickle.UnpicklingError):
-            return {"students": [], "subjects": [], "enrollments": []}
-    
-    def save_data(self, data):
-        """Save all data to the single data file"""
-        with open(self.data_filepath, "wb") as file:
-            pickle.dump(data, file)
-    
     # Student methods
+    
     def load_students(self):
-        data = self.load_data()
-        return data["students"]
+        if not os.path.exists(self.students_filepath):
+            return []
+        try:
+            with open(self.students_filepath, "rb") as file:
+                students = pickle.load(file)
+                return students
+        except (EOFError, pickle.UnpicklingError):
+            return []
 
     def save_students(self, students):
-        data = self.load_data()
-        data["students"] = students
-        self.save_data(data)
+        with open(self.students_filepath, "wb") as file:
+            pickle.dump(students, file)
 
     def add_student(self, student):
         students = self.load_students()
@@ -125,13 +62,17 @@ class Database:
     
     # Subject methods
     def load_subjects(self):
-        data = self.load_data()
-        return data["subjects"]
+        if not os.path.exists(self.subjects_filepath):
+            return []
+        try:
+            with open(self.subjects_filepath, "rb") as file:
+                return pickle.load(file)
+        except (EOFError, pickle.UnpicklingError):
+            return []
 
     def save_subjects(self, subjects):
-        data = self.load_data()
-        data["subjects"] = subjects
-        self.save_data(data)
+        with open(self.subjects_filepath, "wb") as file:
+            pickle.dump(subjects, file)
 
     def add_subject(self, subject):
         subjects = self.load_subjects()
@@ -157,13 +98,17 @@ class Database:
     
     # Enrollment methods
     def load_enrollments(self):
-        data = self.load_data()
-        return data["enrollments"]
+        if not os.path.exists(self.enrollments_filepath):
+            return []
+        try:
+            with open(self.enrollments_filepath, "rb") as file:
+                return pickle.load(file)
+        except (EOFError, pickle.UnpicklingError):
+            return []
 
     def save_enrollments(self, enrollments):
-        data = self.load_data()
-        data["enrollments"] = enrollments
-        self.save_data(data)
+        with open(self.enrollments_filepath, "wb") as file:
+            pickle.dump(enrollments, file)
 
     def add_enrollment(self, enrollment):
         # Check if student already has 4 enrollments
@@ -231,9 +176,12 @@ class Database:
     # General methods
     def clear(self):
         """Clear all data from the database."""
-        if os.path.exists(self.data_filepath):
-            with open(self.data_filepath, "wb") as file:
-                pickle.dump({"students": [], "subjects": [], "enrollments": []}, file)
-                print("Database cleared.")
-            return True
-        return False
+        success = False
+        for filepath in [self.students_filepath, self.subjects_filepath, self.enrollments_filepath]:
+            if os.path.exists(filepath):
+                with open(filepath, "wb") as file:
+                    pickle.dump([], file)
+                success = True
+        if success:
+            print("Database cleared.")
+        return success

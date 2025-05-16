@@ -1,5 +1,7 @@
 from UniSystemCLI.controllers.student_controller import StudentController
 from UniSystemCLI.controllers.admin_controller import AdminController
+from UniSystemCLI.utils.console import console, CONSOLE_COLORS
+
 
 class UniversityController:
     def __init__(self):
@@ -8,10 +10,8 @@ class UniversityController:
 
     def run(self):
         while True:
-            print("\nUniversity System Main Menu:\n(A) Admin Subsystem\n(S) Student Subsystem\n(X) Exit")
-            # print("(A) Admin Subsystem")
-            # print("(S) Student Subsystem")
-            # print("(X) Exit")
+            console("\nUniversity System Main Menu:\n(S) Student Subsystem\n(A) Admin Subsystem\n(X) Exit")
+            console("Choose an option:", CONSOLE_COLORS.YELLOW)
             choice = input("Enter your choice: ").strip().upper()
 
             if choice == "A":self.admin_controller.run()
