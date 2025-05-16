@@ -2,6 +2,7 @@ import os
 import pickle
 
 from UniSystemCLI.models.student import Student
+from UniSystemCLI.utils.console import console
 
 
 class Database:
@@ -138,11 +139,14 @@ class Database:
         return sum(enrollment.mark for enrollment in enrollments) / len(enrollments)
     
     def is_student_passing(self, student_id):
-        """Check if the student has passed all enrolled subjects."""
+        """Check if the student has passed all enrolled subjects.
+        A student is considered passing if they have no F grades and no N/A grades.
+        """
         enrollments = self.get_enrollments_by_student_id(student_id)
         if not enrollments:
             return False
-        return all(enrollment.grade != "F" for enrollment in enrollments)
+        # A student passes if they have no F grades and no N/A grades
+        return all(enrollment.grade not in ["F", "N/A"] for enrollment in enrollments)
     
     def get_enrollments_by_subject_id(self, subject_id):
         enrollments = self.load_enrollments()
@@ -183,5 +187,5 @@ class Database:
                     pickle.dump([], file)
                 success = True
         if success:
-            print("Database cleared.")
+            console("Database cleared.")
         return success

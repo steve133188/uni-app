@@ -1,12 +1,12 @@
 import random
 
 class Enrollment:
-    def __init__(self, student_id, subject_id, mark=0 , grade='N/A'):
+    def __init__(self, student_id, subject_id):
         self.id = str(random.randint(10000, 99999))  # Generate a random 5-digit ID
         self.student_id = student_id
         self.subject_id = subject_id
-        self.mark = mark  # Default mark is 0
-        self.grade = grade  # Default grade is N/A
+        self.mark = random.randint(0, 100)
+        self.grade = self.calculate_grade()
     
     def set_mark(self, mark):
         """Set the mark for this enrollment and calculate the grade."""

@@ -1,7 +1,9 @@
-from UniSystemCLI.utils.console import console, CONSOLE_COLORS
+from UniSystemCLI.models.subject import Subject
+from UniSystemCLI.utils.console import console, CONSOLE_COLORS, display_table
 from UniSystemCLI.utils.validators import validate_email, validate_password
 from UniSystemCLI.models.database import Database
 from UniSystemCLI.models.student import Student
+from UniSystemCLI.models.enrollment import Enrollment
 
 class StudentController:
     def __init__(self):
@@ -40,23 +42,42 @@ class StudentController:
     def register(self):
         console("Student Sign Up", CONSOLE_COLORS.GREEN)
         name = input("Enter your name: ").strip()
-        email = input("Enter your email: ").strip()
-        password = input("Enter your password: ").strip()
-
-        # Validate email format
-        if not validate_email(email) or not validate_password(password):
-            console("Invalid email or password format.",CONSOLE_COLORS.RED)
-            return
-
-        # Check if the student already exists
-        if self.database.get_student_by_email(email):
-            console(f"Student {email} already exists",CONSOLE_COLORS.RED)
-            return
+        
+        # Email validation loop
+        while True:
+            email = input("Enter your email (or 'x' to cancel): ").strip()
+            if email.lower() == 'x':
+                console("Registration cancelled.", CONSOLE_COLORS.YELLOW)
+                return
+                
+            if not validate_email(email):
+                console("Email must be in a valid format (e.g., user@university.com)", CONSOLE_COLORS.RED)
+                continue
+                
+            # Check if the student already exists
+            if self.database.get_student_by_email(email):
+                console(f"Student with email {email} already exists", CONSOLE_COLORS.RED)
+                continue
+                
+            break  # Valid email, proceed to password
+        
+        # Password validation loop
+        while True:
+            password = input("Enter your password (or 'x' to cancel): ").strip()
+            if password.lower() == 'x':
+                console("Registration cancelled.", CONSOLE_COLORS.YELLOW)
+                return
+                
+            if not validate_password(password):
+                console("Password must be at least 8 characters long and contain at least one digit.", CONSOLE_COLORS.RED)
+                continue
+                
+            break  # Valid password
 
         # Create and save the new student
         student = Student(name, email, password)
         self.database.add_student(student)  # Save the student to the database
-        console("Registration successful!",CONSOLE_COLORS.GREEN)
+        console(f"Registration successful! Your student ID is: {student.id}", CONSOLE_COLORS.GREEN)
 
     def post_login_menu(self, student):
         while True:
@@ -74,81 +95,133 @@ class StudentController:
             if choice == "c":
                 new_password = input("Enter new password: ").strip()
                 if validate_password(new_password):
+                    # Update the student object
                     student.change_password(new_password)
+                    # Update the student in the database
                     students = self.database.load_students()
                     for s in students:
                         if s.id == student.id:
-                            s.password = new_password
+                            s.password = student.password  # Use the updated password from student object
                             break
                     self.database.save_students(students)
                     console("Password changed successfully.",CONSOLE_COLORS.GREEN)
                 else:
                     console("Invalid password format.",CONSOLE_COLORS.RED)
             elif choice == "e":
-                # Show available subjects
-                subjects = self.database.load_subjects()
-                if not subjects:
+                # Get current enrollments to filter out already enrolled subjects
+                current_enrollments = self.database.get_enrollments_by_student_id(student.id)
+                enrolled_subject_ids = [e.subject_id for e in current_enrollments]
+                
+                # Show available subjects that are not already enrolled
+                all_subjects = self.database.load_subjects()
+                available_subjects = [s for s in all_subjects if s.id not in enrolled_subject_ids]
+                
+                if not available_subjects:
                     console("No subjects available for enrollment.",CONSOLE_COLORS.YELLOW)
                     continue
-                    
-                console("\nAvailable Subjects:",CONSOLE_COLORS.GREEN)
-                for i, subject in enumerate(subjects):
-                    console(f"{i+1}. {subject.code}: {subject.name}")
                 
-                try:
-                    choice = int(input("\nEnter subject number to enroll (0 to cancel): "))
-                    if choice == 0:
-                        continue
-                    if choice < 1 or choice > len(subjects):
-                        console("Invalid selection.",CONSOLE_COLORS.RED)
-                        continue
+                # Display available subjects in a table
+                console("\nAvailable Subjects:",CONSOLE_COLORS.GREEN)
+                headers = ["#", "Code", "Name", "Description"]
+                rows = [[i+1, subject.code, subject.name, subject.description] 
+                        for i, subject in enumerate(available_subjects)]
+                display_table(headers, rows, CONSOLE_COLORS.CYAN)
+                
+                # Allow multiple enrollments
+                while True:
+                    try:
+                        choice_input = input("\nEnter subject number to enroll (0 to finish, x to cancel): ")
                         
-                    selected_subject = subjects[choice-1]
-                    
-                    # Create enrollment
-                    from UniSystemCLI.models.enrollment import Enrollment
-                    enrollment = Enrollment(student.id, selected_subject.id)
-                    
-                    # Add to database
-                    result, message = self.database.add_enrollment(enrollment)
-                    console(message)
-                except ValueError:
-                    console("Please enter a valid number.",CONSOLE_COLORS.RED)
-                except Exception as e:
-                    console(f"Error: {str(e)}",CONSOLE_COLORS.RED)
+                        # Check for cancel option
+                        if choice_input.lower() == 'x':
+                            console("Enrollment process cancelled.", CONSOLE_COLORS.YELLOW)
+                            break
+                            
+                        choice = int(choice_input)
+                        
+                        if choice == 0:
+                            console(f"Enrollment process completed.", CONSOLE_COLORS.GREEN)
+                            break
+                            
+                        if choice < 1 or choice > len(available_subjects):
+                            console("Invalid selection.",CONSOLE_COLORS.RED)
+                            continue
+                            
+                        selected_subject = available_subjects[choice-1]
+                        
+                        # Create enrollment
+                        enrollment = Enrollment(student.id, selected_subject.id)
+                        
+                        # Add to database
+                        result, message = self.database.add_enrollment(enrollment)
+                        console(message, CONSOLE_COLORS.GREEN if result else CONSOLE_COLORS.RED)
+                        
+                        # Remove the enrolled subject from the available list
+                        if result:
+                            available_subjects.pop(choice-1)
+                            # Redisplay the updated table
+                            if available_subjects:
+                                console("\nRemaining Available Subjects:",CONSOLE_COLORS.GREEN)
+                                rows = [[i+1, subject.code, subject.name, subject.description] 
+                                        for i, subject in enumerate(available_subjects)]
+                                display_table(headers, rows, CONSOLE_COLORS.CYAN)
+                            else:
+                                console("No more subjects available for enrollment.",CONSOLE_COLORS.YELLOW)
+                                break
+                    except ValueError:
+                        console("Please enter a valid number.",CONSOLE_COLORS.RED)
+                    except Exception as e:
+                        console(f"Error: {str(e)}",CONSOLE_COLORS.RED)
                     
             elif choice == "r":
-                # Show enrolled subjects
-                enrollments = self.database.get_enrollments_by_student_id(student.id)
-                if not enrollments:
-                    console("You are not enrolled in any subjects.",CONSOLE_COLORS.YELLOW)
-                    continue
-                    
-                console("\nYour Enrollments:",CONSOLE_COLORS.YELLOW)
-                for i, enrollment in enumerate(enrollments):
-                    subject = self.database.get_subject_by_id(enrollment.subject_id)
-                    if subject:
-                        console(f"{i+1}. {subject.code}: {subject.name} - Mark: {enrollment.mark}, Grade: {enrollment.grade}",CONSOLE_COLORS.CYAN)
-                
-                try:
-                    choice = int(input("\nEnter enrollment number to remove (0 to cancel): "))
-                    if choice == 0:
-                        continue
-                    if choice < 1 or choice > len(enrollments):
-                        console("Invalid selection.",CONSOLE_COLORS.RED)
-                        continue
+                while True:
+                    # Show enrolled subjects
+                    enrollments = self.database.get_enrollments_by_student_id(student.id)
+                    if not enrollments:
+                        console("You are not enrolled in any subjects.",CONSOLE_COLORS.YELLOW)
+                        break
                         
-                    selected_enrollment = enrollments[choice-1]
+                    # Display enrollments in a table
+                    console("\nYour Enrollments:",CONSOLE_COLORS.YELLOW)
+                    headers = ["#", "Code", "Name", "Mark", "Grade"]
+                    rows = []
                     
-                    # Remove from database
-                    if self.database.remove_enrollment(student.id, selected_enrollment.subject_id):
-                        console("Successfully withdrawn from subject.")
-                    else:
-                        console("Failed to withdrawn from subject.",CONSOLE_COLORS.RED)
-                except ValueError:
-                    console("Please enter a valid number.",CONSOLE_COLORS.RED)
-                except Exception as e:
-                    console(f"Error: {str(e)}",CONSOLE_COLORS.RED)
+                    for i, enrollment in enumerate(enrollments):
+                        subject = self.database.get_subject_by_id(enrollment.subject_id)
+                        if subject:
+                            rows.append([i+1, subject.code, subject.name, enrollment.mark, enrollment.grade])
+                    
+                    display_table(headers, rows, CONSOLE_COLORS.CYAN)
+
+                    try:
+                        choice_input = input("\nEnter enrollment number to withdraw from (0 to finish, x to cancel): ")
+                        
+                        # Check for cancel option
+                        if choice_input.lower() == 'x':
+                            console("Withdrawal process cancelled.", CONSOLE_COLORS.YELLOW)
+                            break
+                            
+                        choice = int(choice_input)
+                        
+                        if choice == 0:
+                            console("Withdrawal process completed.", CONSOLE_COLORS.GREEN)
+                            break
+                            
+                        if choice < 1 or choice > len(enrollments):
+                            console("Invalid selection.",CONSOLE_COLORS.RED)
+                            continue
+                            
+                        selected_enrollment = enrollments[choice-1]
+                        
+                        # Remove from database
+                        if self.database.remove_enrollment(student.id, selected_enrollment.subject_id):
+                            console("Successfully withdrawn from subject.",CONSOLE_COLORS.GREEN)
+                        else:
+                            console("Failed to withdraw from subject.",CONSOLE_COLORS.RED)
+                    except ValueError:
+                        console("Please enter a valid number.",CONSOLE_COLORS.RED)
+                    except Exception as e:
+                        console(f"Error: {str(e)}",CONSOLE_COLORS.RED)
             elif choice == "s":
                 # Get enrollments from database
                 enrollments = self.database.get_enrollments_by_student_id(student.id)
@@ -157,18 +230,43 @@ class StudentController:
                     console("No subjects enrolled.",CONSOLE_COLORS.YELLOW)
                 else:
                     console("\nEnrolled Subjects:",CONSOLE_COLORS.YELLOW)
+                    
+                    # Display enrollments in a table
+                    headers = ["Code", "Name", "Description", "Mark", "Grade"]
+                    rows = []
+                    
                     for enrollment in enrollments:
                         subject = self.database.get_subject_by_id(enrollment.subject_id)
                         if subject:
-                            console(f"Subject: {subject.code}: {subject.name}",CONSOLE_COLORS.GREEN)
-                            console(f"Mark: {enrollment.mark}, Grade: {enrollment.grade}",CONSOLE_COLORS.GREEN)
+                            rows.append([subject.code, subject.name, subject.description, 
+                                        enrollment.mark, enrollment.grade])
+                    
+                    display_table(headers, rows, CONSOLE_COLORS.GREEN)
                     
                     # Calculate average mark and pass status
                     avg_mark = self.database.calculate_student_average_mark(student.id)
                     is_passing = self.database.is_student_passing(student.id)
                     
-                    console(f"\nAverage Mark: {avg_mark:.2f}",CONSOLE_COLORS.CYAN)
-                    console(f"Overall Status: {'Pass' if is_passing else 'Fail'}",CONSOLE_COLORS.GREEN if not is_passing else CONSOLE_COLORS.RED)
+                    # Display summary in a table
+                    summary_headers = ["Metric", "Value", "Status"]
+                    
+                    # Determine mark status
+                    mark_status = "Poor"
+                    mark_color = CONSOLE_COLORS.RED
+                    if avg_mark >= 70:
+                        mark_status = "Excellent"
+                        mark_color = CONSOLE_COLORS.GREEN
+                    elif avg_mark >= 40:
+                        mark_status = "Satisfactory"
+                        mark_color = CONSOLE_COLORS.YELLOW
+                    
+                    # Determine overall status
+                    status_text = "Pass" if is_passing else "Fail"
+                    status_color = CONSOLE_COLORS.GREEN if is_passing else CONSOLE_COLORS.RED
+                    
+                    console("\nSummary:", CONSOLE_COLORS.CYAN)
+                    console(f"Average Mark: {avg_mark:.2f}", mark_color)
+                    console(f"Overall Status: {status_text}", status_color)
             elif choice == "x":
                 console("Exiting post-login menu.", CONSOLE_COLORS.GREEN)
                 break
