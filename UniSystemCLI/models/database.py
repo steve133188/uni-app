@@ -1,8 +1,6 @@
 import os
 import pickle
-from models.student import Student
-from models.subject import Subject
-from models.enrollment import Enrollment
+
 
 class Database:
     def __init__(self):
@@ -236,5 +234,6 @@ class Database:
         if os.path.exists(self.data_filepath):
             with open(self.data_filepath, "wb") as file:
                 pickle.dump({"students": [], "subjects": [], "enrollments": []}, file)
+                print("Database cleared.")
             return True
         return False

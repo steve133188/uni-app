@@ -5,10 +5,10 @@ import random
 # Add parent directory to path to ensure imports work correctly
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from models.student import Student
-from models.subject import Subject
-from models.enrollment import Enrollment
-from models.database import Database
+from UniSystemCLI.models.student import Student
+from UniSystemCLI.models.subject import Subject
+from UniSystemCLI.models.enrollment import Enrollment
+from UniSystemCLI.models.database import Database
 
 def generate_demo_data():
     """Generate demo data for the university management system"""
@@ -59,7 +59,7 @@ def generate_demo_data():
             enrollment.set_mark(random.randint(40, 100))
             
             # Add enrollment to student and database
-            student.enroll(enrollment)
+            student.enroll_subject(enrollment)
             db.add_enrollment(enrollment)
         
         # Update student in database with enrollments

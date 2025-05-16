@@ -1,7 +1,6 @@
-from models.subject import Subject
-from utils.validators import validate_email, validate_password
-from models.database import Database
-from models.student import Student
+from UniSystemCLI.utils.validators import validate_email, validate_password
+from UniSystemCLI.models.database import Database
+from UniSystemCLI.models.student import Student
 
 class StudentController:
     def __init__(self):
@@ -101,7 +100,7 @@ class StudentController:
                     selected_subject = subjects[choice-1]
                     
                     # Create enrollment
-                    from models.enrollment import Enrollment
+                    from UniSystemCLI.models.enrollment import Enrollment
                     enrollment = Enrollment(student.id, selected_subject.id)
                     
                     # Add to database

@@ -6,9 +6,9 @@ import os
 # Add parent directory to path to ensure imports work correctly
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from models.database import Database
-from models.subject import Subject
-from models.enrollment import Enrollment
+from UniSystemCLI.models.database import Database
+from UniSystemCLI.models.subject import Subject
+from UniSystemCLI.models.enrollment import Enrollment
 
 class SubjectEnrollmentView(ttk.Frame):
     """A view for managing subjects and enrollments"""

@@ -6,8 +6,8 @@ import sys
 # Add parent directory to path to ensure imports work correctly
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from models.database import Database
-from models.admin_database import AdminDatabase
+from UniSystemCLI.models.database import Database
+from UniSystemCLI.models.admin_database import AdminDatabase
 
 class NextJSStyleApp(tk.Tk):
     def __init__(self):
@@ -148,8 +148,7 @@ class NextJSStyleApp(tk.Tk):
     def create_card_frame(self, parent, padding=(16, 16)):
         """Create a card-style frame with Apple's minimal design"""
         # Import BaseView here to avoid circular imports
-        from guiApp.views.base_view import BaseView
-        
+
         # Create outer frame with minimal styling
         outer_frame = ttk.Frame(parent, style="Card.TFrame")
         

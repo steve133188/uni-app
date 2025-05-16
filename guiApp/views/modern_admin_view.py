@@ -6,7 +6,7 @@ import os
 # Add parent directory to path to ensure imports work correctly
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from models.database import Database
+from UniSystemCLI.models.database import Database
 from guiApp.views.base_view import BaseView
 
 class ModernAdminView(BaseView):

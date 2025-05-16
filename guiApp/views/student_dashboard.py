@@ -1,4 +1,4 @@
-from tkinter import Frame, Label, Button, Tk, StringVar
+from tkinter import Frame, Label, Tk
 from tkinter import ttk
 import sys
 import os
@@ -6,7 +6,7 @@ import os
 # Add parent directory to path to ensure imports work correctly
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from models.database import Database
+from UniSystemCLI.models.database import Database
 
 class StudentDashboard(Frame):
     def __init__(self, master, student):

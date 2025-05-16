@@ -1,4 +1,6 @@
-from models.database import Database
+from UniSystemCLI.models.database import Database
+from UniSystemCLI.models.student import Student
+
 
 class AdminController:
     def __init__(self):
@@ -6,38 +8,28 @@ class AdminController:
 
     def run(self):
         while True:
-            print("\nAdmin Subsystem:")
-            print("(C) Clear Database")
-            print("(G) Group Students by Grade")
-            print("(P) Partition Students into PASS/FAIL")
-            print("(R) Remove a Student by ID")
-            print("(S) Show All Students")
-            print("(X) Exit")
+            print(
+                "\nAdmin Subsystem:\n(C) Clear Database\n(G) Group Students by Grade\n"
+                +"(P) Partition Students into PASS/FAIL"
+                +"\n(R) Remove a Student by ID\n(S) Show All Students\n(X) Exit"
+            )
             choice = input("Enter your choice: ").strip().lower()
 
-            if choice == "c":
-                self.database.clear()
-                print("Database cleared.")
-            elif choice == "g":
-                self.group_students_by_grade()
-            elif choice == "p":
-                self.partition_students()
+            if choice == "c":self.database.clear()
+            elif choice == "g":self.group_students_by_grade()
+            elif choice == "p":self.partition_students()
             elif choice == "r":
                 student_id = input("Enter student ID to remove: ").strip()
-                if self.database.remove_student(student_id):
-                    print(f"Student {student_id} removed.")
-                else:
-                    print("Student not found.")
-            elif choice == "s":
-                self.show_all_students()
+                if self.database.remove_student(student_id):print(f"Student {student_id} removed.")
+                else:print("Student not found.")
+            elif choice == "s":self.show_all_students()
             elif choice == "x":
                 print("Exiting Admin Subsystem.")
                 break
-            else:
-                print("Invalid choice. Please try again.")
+            else:print("Invalid choice. Please try again.")
 
     def group_students_by_grade(self):
-        students = self.database.load_students()
+        students:[Student] = self.database.load_students()
         grades = {}
         for student in students:
             for subject in student.subjects:
@@ -46,8 +38,8 @@ class AdminController:
             print(f"Grade {grade}: {[student.name for student in students]}")
 
     def partition_students(self):
-        students = self.database.load_students()
-        passed = [student for student in students if student.is_pass()]
+        students:[Student] = self.database.load_students()
+        passed = [student for student in students if student.is_passed()]
         failed = [student for student in students if not student.is_pass()]
         print("PASS:")
         for student in passed:

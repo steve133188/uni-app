@@ -1,6 +1,6 @@
-from tkinter import Frame, Label, Entry, Button, messagebox, Tk
+from tkinter import Frame, Label, messagebox, Tk
 from tkinter import ttk
-from models.database import Database
+from UniSystemCLI.models.database import Database
 from guiApp.views.student_dashboard import StudentDashboard
 
 class LoginWindow(Frame):
